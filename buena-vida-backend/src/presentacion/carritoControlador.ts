@@ -2,8 +2,13 @@ import { Request, Response } from "express";
 import { AgregarProductoAlCarrito } from "../aplicacion/carrito/AgregarProductoAlCarrito";
 import { VerCarrito } from "../aplicacion/carrito/verCarrito";
 import { ActualizarCantidadProducto } from "../aplicacion/carrito/actualizarCantidadProducto";
+<<<<<<< HEAD
 import { EliminarProductoCarrito } from "../aplicacion/carrito/eliminarProductoCarrito";
 import { VaciarCarrito } from "../aplicacion/carrito/vaciarCarrito";
+=======
+import { EliminarProductoCarrito } from "../aplicacion/carrito/EliminarProductoCarrito";
+import { VaciarCarrito } from "../aplicacion/carrito/VaciarCarrito";
+>>>>>>> e3e9562787b66d1c231215e0c8228f7c022257a0
 import { CarritoRepositorioSQL } from "../infraestructura/CarritoRepositorioSQL";
 
 const carritoRepositorio = new CarritoRepositorioSQL();
