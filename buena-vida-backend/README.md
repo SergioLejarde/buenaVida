@@ -74,7 +74,7 @@ Antes de ejecutar el backend, asegúrate de tener instalado:
 
 ### 🔹 **1️⃣ Clonar el Repositorio**
 
-git clone https://github.com/usuario/buena-vida-backend.git
+git clone <https://github.com/usuario/buena-vida-backend.git>
 cd buena-vida-backend
 
 
@@ -101,7 +101,7 @@ Esto creará las tablas necesarias en la base de datos.
 
 npx ts-node src/server.ts
 
-El servidor estará corriendo en **http://localhost:3000**.
+El servidor estará corriendo en **<http://localhost:3000>**.
 
 ---
 
