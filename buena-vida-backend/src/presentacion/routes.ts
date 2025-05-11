@@ -1,5 +1,5 @@
 import express from "express";
-import { listarProductos } from "./productoControlador";
+import { productoControlador as listarProductos } from "./productoControlador";
 import { registrar, login } from "./usuarioControlador";
 import { 
   agregarAlCarrito, 

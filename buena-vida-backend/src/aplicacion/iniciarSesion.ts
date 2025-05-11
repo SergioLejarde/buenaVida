@@ -5,7 +5,8 @@ import jwt from "jsonwebtoken";
 export class IniciarSesion {
   constructor(private usuarioRepositorio: UsuarioRepositorio) {}
 
-  async ejecutar(email: string, password: string): Promise<{ token: string }> {
+  async ejecutar(email: string, password: string): Promise<{ token: string, usuarioId: number }> {
+
     const usuario = await this.usuarioRepositorio.obtenerPorEmail(email);
     if (!usuario) {
       throw new Error("Credenciales incorrectas");
@@ -22,6 +23,7 @@ export class IniciarSesion {
       { expiresIn: "1h" }
     );
 
-    return { token };
+    return { token, usuarioId: usuario.id };
+
   }
 }

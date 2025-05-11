@@ -1,4 +1,4 @@
-import { Producto } from "./producto"; // 👈 Asegúrate de agregar esta línea
+import { Producto } from "./producto";
 
 export interface ProductoRepositorio {
   obtenerTodos(): Promise<Producto[]>;
@@ -6,4 +6,14 @@ export interface ProductoRepositorio {
   guardar(producto: Producto): Promise<void>;
   actualizar(id: number, producto: Producto): Promise<void>;
   eliminar(id: number): Promise<void>;
+
+  // 👇 Nuevo método requerido por el parcial
+  filtrar(filtros: {
+    busqueda?: string;
+    precioMin?: number;
+    precioMax?: number;
+    promocion?: boolean;
+    offset?: number;
+    limit?: number;
+  }): Promise<Producto[]>;
 }
