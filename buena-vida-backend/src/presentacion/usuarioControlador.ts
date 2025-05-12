@@ -25,8 +25,8 @@ export const registrar = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    const { token, usuarioId } = await iniciarSesion.ejecutar(email, password);
-    res.json({ token, usuarioId });
+    const { token, usuarioId, rol } = await iniciarSesion.ejecutar(email, password);
+    res.json({ token, usuarioId, rol }); // ✅ Se incluye el rol en la respuesta
   } catch (error) {
     if (error instanceof Error) {
       res.status(401).json({ error: error.message });

@@ -11,10 +11,10 @@ export class RegistrarUsuario {
       throw new Error("El usuario ya está registrado.");
     }
 
-    // Hash de la contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const nuevoUsuario = new Usuario(0, nombre, email, passwordHash);
+    // Asignamos rol por defecto: "cliente"
+    const nuevoUsuario = new Usuario(0, nombre, email, passwordHash, "cliente");
     await this.usuarioRepositorio.registrar(nuevoUsuario);
 
     return nuevoUsuario;
