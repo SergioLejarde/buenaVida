@@ -17,7 +17,7 @@ export class IniciarSesion {
     }
 
     // 🛡️ Incluir el rol en el token
-    const token = jwt.sign(
+    const token = jwt.sign(//se genera el JWT
       { id: usuario.id, email: usuario.email, rol: usuario.rol },
       process.env.JWT_SECRET as string,
       { expiresIn: "1h" }
