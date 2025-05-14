@@ -12,6 +12,8 @@ import { realizarPedido, obtenerPedidos } from "./pedidoControlador";
 import { verificarToken } from "../middleware/auth";
 import { verificarRol } from "../middleware/verificarRol";
 import { UsuarioRepositorioSQL } from "../infraestructura/usuarioRepositorioSQL";
+import { obtenerFavoritos } from "./favoritosControlador";
+import { agregarFavorito } from "./agregarFavoritoControlador"; // ✅ nuevo import
 
 const router = express.Router();
 
@@ -31,17 +33,21 @@ router.get("/usuarios", verificarToken, verificarRol("admin"), async (req, res) 
 });
 
 // 🔹 Rutas de Productos
-router.get("/productos", productoControlador);         // ✅ corregido
-router.get("/productos/:id", obtenerProductoPorId);    // ✅ sigue funcionando
+router.get("/productos", productoControlador);
+router.get("/productos/:id", obtenerProductoPorId);
 
-// 🔹 Rutas de Carrito de Compras (Protegidas con Token)
+// 🔹 Rutas de Favoritos
+router.get("/favoritos/:usuarioId", verificarToken, obtenerFavoritos);
+router.post("/favoritos", verificarToken, agregarFavorito); // ✅ NUEVA RUTA
+
+// 🔹 Rutas de Carrito de Compras
 router.post("/carrito/agregar", verificarToken, agregarAlCarrito);
 router.get("/carrito", verificarToken, obtenerCarrito);
 router.put("/carrito/actualizar", verificarToken, actualizarCantidadCarrito);
 router.delete("/carrito/eliminar", verificarToken, eliminarProductoCarrito);
 router.delete("/carrito/vaciar", verificarToken, vaciarCarrito);
 
-// 🔹 Rutas de Pedidos (Protegidas con Token)
+// 🔹 Rutas de Pedidos
 router.post("/pedidos", verificarToken, realizarPedido);
 router.get("/pedidos", verificarToken, obtenerPedidos);
 
