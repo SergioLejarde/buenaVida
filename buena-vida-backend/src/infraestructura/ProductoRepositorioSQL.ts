@@ -86,22 +86,27 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
     } = filtros;
 
     const valores: any[] = [];
-    let condiciones: string[] = [];
+    const condiciones: string[] = [];
+    let i = 1;
 
     if (busqueda) {
-      condiciones.push(`(LOWER(nombre) LIKE $${valores.length + 1} OR LOWER(descripcion) LIKE $${valores.length + 1})`);
+      condiciones.push(`(LOWER(nombre) LIKE $${i} OR LOWER(descripcion) LIKE $${i})`);
       valores.push(`%${busqueda.toLowerCase()}%`);
+      i++;
     }
 
-    condiciones.push(`precio >= $${valores.length + 1}`);
+    condiciones.push(`precio >= $${i}`);
     valores.push(precioMin);
+    i++;
 
-    condiciones.push(`precio <= $${valores.length + 1}`);
+    condiciones.push(`precio <= $${i}`);
     valores.push(precioMax);
+    i++;
 
-    if (promocion !== undefined) {
-      condiciones.push(`promocion = $${valores.length + 1}`);
+    if (typeof promocion === "boolean") {
+      condiciones.push(`promocion = $${i}`);
       valores.push(promocion);
+      i++;
     }
 
     let query = `SELECT * FROM productos`;
@@ -109,7 +114,7 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
       query += ` WHERE ` + condiciones.join(" AND ");
     }
 
-    query += ` ORDER BY id LIMIT $${valores.length + 1} OFFSET $${valores.length + 2}`;
+    query += ` ORDER BY id LIMIT $${i} OFFSET $${i + 1}`;
     valores.push(limit, offset);
 
     const result = await pool.query(query, valores);
@@ -125,5 +130,52 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
         row.promocion
       )
     );
+  }
+
+  // ✅ corregido: contar productos para paginación sin errores
+  async contarFiltrados(filtros: {
+    busqueda?: string;
+    precioMin?: number;
+    precioMax?: number;
+    promocion?: boolean;
+  }): Promise<number> {
+    const {
+      busqueda = '',
+      precioMin = 0,
+      precioMax = Number.MAX_SAFE_INTEGER,
+      promocion
+    } = filtros;
+
+    const valores: any[] = [];
+    const condiciones: string[] = [];
+    let i = 1;
+
+    if (busqueda) {
+      condiciones.push(`(LOWER(nombre) LIKE $${i} OR LOWER(descripcion) LIKE $${i})`);
+      valores.push(`%${busqueda.toLowerCase()}%`);
+      i++;
+    }
+
+    condiciones.push(`precio >= $${i}`);
+    valores.push(precioMin);
+    i++;
+
+    condiciones.push(`precio <= $${i}`);
+    valores.push(precioMax);
+    i++;
+
+    if (typeof promocion === "boolean") {
+      condiciones.push(`promocion = $${i}`);
+      valores.push(promocion);
+      i++;
+    }
+
+    let query = `SELECT COUNT(*) FROM productos`;
+    if (condiciones.length > 0) {
+      query += ` WHERE ` + condiciones.join(" AND ");
+    }
+
+    const result = await pool.query(query, valores);
+    return parseInt(result.rows[0].count);
   }
 }

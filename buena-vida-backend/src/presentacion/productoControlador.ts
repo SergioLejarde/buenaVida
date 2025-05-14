@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import { ObtenerProductos } from "../aplicacion/obtenerProductos";
 import { ProductoRepositorioSQL } from "../infraestructura/ProductoRepositorioSQL";
 
-export const productoControlador = async (req: Request, res: Response) => {
-  const repo = new ProductoRepositorioSQL();
+const repo = new ProductoRepositorioSQL();
+
+// ✅ Controlador principal con paginación total
+export const productoControlador = async (req: Request, res: Response): Promise<void> => {
   const servicio = new ObtenerProductos(repo);
 
   const filtros = {
@@ -17,8 +19,39 @@ export const productoControlador = async (req: Request, res: Response) => {
 
   try {
     const productos = await servicio.ejecutar(filtros);
-    res.json(productos);
+
+    const total = await repo.contarFiltrados({
+      busqueda: filtros.q,
+      precioMin: filtros.min,
+      precioMax: filtros.max,
+      promocion: filtros.promo,
+    });
+
+    const totalPaginas = Math.ceil(total / filtros.limit);
+
+    res.json({ productos, totalPaginas });
   } catch (error) {
     res.status(500).json({ error: "Error al obtener productos" });
+  }
+};
+
+// ✅ Nuevo controlador para GET /productos/:id
+export const obtenerProductoPorId = async (req: Request, res: Response): Promise<void> => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "ID inválido" });
+    return;
+  }
+
+  try {
+    const producto = await repo.obtenerPorId(id);
+    if (!producto) {
+      res.status(404).json({ error: "Producto no encontrado" });
+      return;
+    }
+
+    res.json(producto);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener el producto" });
   }
 };
