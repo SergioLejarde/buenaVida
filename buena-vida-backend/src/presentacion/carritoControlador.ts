@@ -5,36 +5,49 @@ import { ActualizarCantidadProducto } from "../aplicacion/carrito/actualizarCant
 import { EliminarProductoCarrito } from "../aplicacion/carrito/eliminarProductoCarrito";
 import { VaciarCarrito } from "../aplicacion/carrito/vaciarCarrito";
 import { CarritoRepositorioSQL } from "../infraestructura/CarritoRepositorioSQL";
+import { ProductoRepositorioSQL } from "../infraestructura/ProductoRepositorioSQL";
 
 const carritoRepositorio = new CarritoRepositorioSQL();
+const productoRepositorio = new ProductoRepositorioSQL();
 const agregarProducto = new AgregarProductoAlCarrito(carritoRepositorio);
 const verCarrito = new VerCarrito(carritoRepositorio);
 const actualizarCantidad = new ActualizarCantidadProducto(carritoRepositorio);
 const eliminarProducto = new EliminarProductoCarrito(carritoRepositorio);
-const vaciarCarritoUseCase = new VaciarCarrito(carritoRepositorio); // 👈 Cambié el nombre para evitar conflicto
+const vaciarCarritoUseCase = new VaciarCarrito(carritoRepositorio);
 
-export const agregarAlCarrito = async (req: Request, res: Response) => {
+export const agregarAlCarrito = async (req: Request, res: Response): Promise<void> => {
   try {
     const usuarioId = (req as any).usuario.id;
     const { productoId, cantidad } = req.body;
     await agregarProducto.ejecutar(usuarioId, productoId, cantidad);
     res.json({ mensaje: "Producto agregado al carrito" });
   } catch (error) {
-    res.status(400).json({ error: error instanceof Error ? error.message : "Error desconocido" }); // 👈 Tipado correcto de error
+    res.status(400).json({ error: error instanceof Error ? error.message : "Error desconocido" });
   }
 };
 
-export const obtenerCarrito = async (req: Request, res: Response) => {
+export const obtenerCarrito = async (req: Request, res: Response): Promise<void> => {
   try {
     const usuarioId = (req as any).usuario.id;
     const carrito = await verCarrito.ejecutar(usuarioId);
-    res.json(carrito);
+
+    const productosDetallados = await Promise.all(
+      (carrito?.productos || []).map(async (item) => {
+        const producto = await productoRepositorio.obtenerPorId(item.productoId);
+        return {
+          ...item,
+          producto: producto || null
+        };
+      })
+    );
+
+    res.json({ ...carrito, productos: productosDetallados });
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : "Error desconocido" });
   }
 };
 
-export const actualizarCantidadCarrito = async (req: Request, res: Response) => {
+export const actualizarCantidadCarrito = async (req: Request, res: Response): Promise<void> => {
   try {
     const usuarioId = (req as any).usuario.id;
     const { productoId, cantidad } = req.body;
@@ -50,7 +63,7 @@ export const actualizarCantidadCarrito = async (req: Request, res: Response) => 
   }
 };
 
-export const eliminarProductoCarrito = async (req: Request, res: Response) => {
+export const eliminarProductoCarrito = async (req: Request, res: Response): Promise<void> => {
   try {
     const usuarioId = (req as any).usuario.id;
     const { productoId } = req.body;
@@ -66,7 +79,7 @@ export const eliminarProductoCarrito = async (req: Request, res: Response) => {
   }
 };
 
-export const vaciarCarrito = async (req: Request, res: Response) => {
+export const vaciarCarrito = async (req: Request, res: Response): Promise<void> => {
   try {
     const usuarioId = (req as any).usuario.id;
     await vaciarCarritoUseCase.ejecutar(usuarioId);
