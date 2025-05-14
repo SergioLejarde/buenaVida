@@ -7,7 +7,7 @@ export interface ProductoRepositorio {
   actualizar(id: number, producto: Producto): Promise<void>;
   eliminar(id: number): Promise<void>;
 
-  // 👇 Nuevo método requerido por el parcial
+  // Filtros con paginación
   filtrar(filtros: {
     busqueda?: string;
     precioMin?: number;
@@ -16,4 +16,12 @@ export interface ProductoRepositorio {
     offset?: number;
     limit?: number;
   }): Promise<Producto[]>;
+
+  // 👇 AÑADIDO: total para paginación
+  contarFiltrados(filtros: {
+    busqueda?: string;
+    precioMin?: number;
+    precioMax?: number;
+    promocion?: boolean;
+  }): Promise<number>;
 }

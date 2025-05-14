@@ -68,6 +68,7 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
     await pool.query("DELETE FROM productos WHERE id = $1", [id]);
   }
 
+  // ✅ MÉTODO FILTRAR CORREGIDO
   async filtrar(filtros: {
     busqueda?: string;
     precioMin?: number;
@@ -76,36 +77,31 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
     offset?: number;
     limit?: number;
   }): Promise<Producto[]> {
-    const {
-      busqueda = '',
-      precioMin = 0,
-      precioMax = Number.MAX_SAFE_INTEGER,
-      promocion,
-      offset = 0,
-      limit = 12,
-    } = filtros;
-
     const valores: any[] = [];
     const condiciones: string[] = [];
     let i = 1;
 
-    if (busqueda) {
+    if (filtros.busqueda && filtros.busqueda.trim() !== "") {
       condiciones.push(`(LOWER(nombre) LIKE $${i} OR LOWER(descripcion) LIKE $${i})`);
-      valores.push(`%${busqueda.toLowerCase()}%`);
+      valores.push(`%${filtros.busqueda.toLowerCase()}%`);
       i++;
     }
 
-    condiciones.push(`precio >= $${i}`);
-    valores.push(precioMin);
-    i++;
+    if (typeof filtros.precioMin === "number") {
+      condiciones.push(`precio >= $${i}`);
+      valores.push(filtros.precioMin);
+      i++;
+    }
 
-    condiciones.push(`precio <= $${i}`);
-    valores.push(precioMax);
-    i++;
+    if (typeof filtros.precioMax === "number") {
+      condiciones.push(`precio <= $${i}`);
+      valores.push(filtros.precioMax);
+      i++;
+    }
 
-    if (typeof promocion === "boolean") {
+    if (typeof filtros.promocion === "boolean") {
       condiciones.push(`promocion = $${i}`);
-      valores.push(promocion);
+      valores.push(filtros.promocion);
       i++;
     }
 
@@ -115,7 +111,7 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
     }
 
     query += ` ORDER BY id LIMIT $${i} OFFSET $${i + 1}`;
-    valores.push(limit, offset);
+    valores.push(filtros.limit ?? 12, filtros.offset ?? 0);
 
     const result = await pool.query(query, valores);
     return result.rows.map(row =>
@@ -132,41 +128,38 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
     );
   }
 
-  // ✅ corregido: contar productos para paginación sin errores
+  // ✅ MÉTODO contarFiltrados CORREGIDO
   async contarFiltrados(filtros: {
     busqueda?: string;
     precioMin?: number;
     precioMax?: number;
     promocion?: boolean;
   }): Promise<number> {
-    const {
-      busqueda = '',
-      precioMin = 0,
-      precioMax = Number.MAX_SAFE_INTEGER,
-      promocion
-    } = filtros;
-
     const valores: any[] = [];
     const condiciones: string[] = [];
     let i = 1;
 
-    if (busqueda) {
+    if (filtros.busqueda && filtros.busqueda.trim() !== "") {
       condiciones.push(`(LOWER(nombre) LIKE $${i} OR LOWER(descripcion) LIKE $${i})`);
-      valores.push(`%${busqueda.toLowerCase()}%`);
+      valores.push(`%${filtros.busqueda.toLowerCase()}%`);
       i++;
     }
 
-    condiciones.push(`precio >= $${i}`);
-    valores.push(precioMin);
-    i++;
+    if (typeof filtros.precioMin === "number") {
+      condiciones.push(`precio >= $${i}`);
+      valores.push(filtros.precioMin);
+      i++;
+    }
 
-    condiciones.push(`precio <= $${i}`);
-    valores.push(precioMax);
-    i++;
+    if (typeof filtros.precioMax === "number") {
+      condiciones.push(`precio <= $${i}`);
+      valores.push(filtros.precioMax);
+      i++;
+    }
 
-    if (typeof promocion === "boolean") {
+    if (typeof filtros.promocion === "boolean") {
       condiciones.push(`promocion = $${i}`);
-      valores.push(promocion);
+      valores.push(filtros.promocion);
       i++;
     }
 

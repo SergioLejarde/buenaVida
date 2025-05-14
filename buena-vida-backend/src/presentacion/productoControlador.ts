@@ -2,42 +2,35 @@ import { Request, Response } from "express";
 import { ObtenerProductos } from "../aplicacion/obtenerProductos";
 import { ProductoRepositorioSQL } from "../infraestructura/ProductoRepositorioSQL";
 
-const repo = new ProductoRepositorioSQL();
-
-// ✅ Controlador principal con paginación total
+// Controlador para listar productos con filtros y paginación
 export const productoControlador = async (req: Request, res: Response): Promise<void> => {
+  const repo = new ProductoRepositorioSQL();
   const servicio = new ObtenerProductos(repo);
 
   const filtros = {
     q: req.query.q?.toString() || "",
     min: parseFloat(req.query.min as string) || 0,
     max: parseFloat(req.query.max as string) || Number.MAX_SAFE_INTEGER,
-    promo: req.query.promo === "true",
+    promo: req.query.promo === "true" ? true : req.query.promo === "false" ? false : undefined,
+
     page: parseInt(req.query.page as string) || 1,
     limit: parseInt(req.query.limit as string) || 12,
   };
 
   try {
-    const productos = await servicio.ejecutar(filtros);
-
-    const total = await repo.contarFiltrados({
-      busqueda: filtros.q,
-      precioMin: filtros.min,
-      precioMax: filtros.max,
-      promocion: filtros.promo,
-    });
-
+    const { productos, total } = await servicio.ejecutar(filtros);
     const totalPaginas = Math.ceil(total / filtros.limit);
-
     res.json({ productos, totalPaginas });
   } catch (error) {
     res.status(500).json({ error: "Error al obtener productos" });
   }
 };
 
-// ✅ Nuevo controlador para GET /productos/:id
+// Controlador para obtener un producto por su ID
 export const obtenerProductoPorId = async (req: Request, res: Response): Promise<void> => {
+  const repo = new ProductoRepositorioSQL();
   const id = parseInt(req.params.id);
+
   if (isNaN(id)) {
     res.status(400).json({ error: "ID inválido" });
     return;

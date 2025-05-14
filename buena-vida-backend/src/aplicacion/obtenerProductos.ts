@@ -2,18 +2,18 @@ import { ProductoRepositorio } from "../dominio/productoRepositorio";
 import { Producto } from "../dominio/producto";
 
 interface FiltrosProductos {
-  q?: string;              // Búsqueda por nombre o descripción
-  min?: number;            // Precio mínimo
-  max?: number;            // Precio máximo
-  promo?: boolean;         // Solo productos en promoción
-  page?: number;           // Página
-  limit?: number;          // Cantidad por página
+  q?: string;
+  min?: number;
+  max?: number;
+  promo?: boolean;
+  page?: number;
+  limit?: number;
 }
 
 export class ObtenerProductos {
   constructor(private productoRepositorio: ProductoRepositorio) {}
 
-  async ejecutar(filtros: FiltrosProductos): Promise<Producto[]> {
+  async ejecutar(filtros: FiltrosProductos): Promise<{ productos: Producto[], total: number }> {
     const {
       q = '',
       min = 0,
@@ -25,7 +25,7 @@ export class ObtenerProductos {
 
     const offset = (page - 1) * limit;
 
-    return await this.productoRepositorio.filtrar({
+    const productos = await this.productoRepositorio.filtrar({
       busqueda: q,
       precioMin: min,
       precioMax: max,
@@ -33,5 +33,14 @@ export class ObtenerProductos {
       offset,
       limit,
     });
+
+    const total = await this.productoRepositorio.contarFiltrados({
+      busqueda: q,
+      precioMin: min,
+      precioMax: max,
+      promocion: promo,
+    });
+
+    return { productos, total };
   }
 }

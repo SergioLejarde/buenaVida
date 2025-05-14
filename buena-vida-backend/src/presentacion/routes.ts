@@ -31,17 +31,17 @@ router.get("/usuarios", verificarToken, verificarRol("admin"), async (req, res) 
 });
 
 // 🔹 Rutas de Productos
-router.get("/productos", productoControlador);         // paginación lista
-router.get("/productos/:id", obtenerProductoPorId);    // modal funcional
+router.get("/productos", productoControlador);         // ✅ corregido
+router.get("/productos/:id", obtenerProductoPorId);    // ✅ sigue funcionando
 
-// 🔹 Rutas de Carrito de Compras
+// 🔹 Rutas de Carrito de Compras (Protegidas con Token)
 router.post("/carrito/agregar", verificarToken, agregarAlCarrito);
 router.get("/carrito", verificarToken, obtenerCarrito);
 router.put("/carrito/actualizar", verificarToken, actualizarCantidadCarrito);
 router.delete("/carrito/eliminar", verificarToken, eliminarProductoCarrito);
 router.delete("/carrito/vaciar", verificarToken, vaciarCarrito);
 
-// 🔹 Rutas de Pedidos
+// 🔹 Rutas de Pedidos (Protegidas con Token)
 router.post("/pedidos", verificarToken, realizarPedido);
 router.get("/pedidos", verificarToken, obtenerPedidos);
 
