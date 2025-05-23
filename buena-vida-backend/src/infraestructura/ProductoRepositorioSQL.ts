@@ -68,7 +68,6 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
     await pool.query("DELETE FROM productos WHERE id = $1", [id]);
   }
 
-  // ✅ MÉTODO FILTRAR CORREGIDO
   async filtrar(filtros: {
     busqueda?: string;
     precioMin?: number;
@@ -81,7 +80,7 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
     const condiciones: string[] = [];
     let i = 1;
 
-    if (filtros.busqueda && filtros.busqueda.trim() !== "") {
+    if (filtros.busqueda?.trim()) {
       condiciones.push(`(LOWER(nombre) LIKE $${i} OR LOWER(descripcion) LIKE $${i})`);
       valores.push(`%${filtros.busqueda.toLowerCase()}%`);
       i++;
@@ -110,10 +109,26 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
       query += ` WHERE ` + condiciones.join(" AND ");
     }
 
-    query += ` ORDER BY id LIMIT $${i} OFFSET $${i + 1}`;
-    valores.push(filtros.limit ?? 12, filtros.offset ?? 0);
+    query += ` ORDER BY id`;
+
+    if (typeof filtros.limit === "number") {
+      query += ` LIMIT $${i}`;
+      valores.push(filtros.limit);
+      i++;
+    }
+
+    if (typeof filtros.offset === "number") {
+      query += ` OFFSET $${i}`;
+      valores.push(filtros.offset);
+    }
+
+    console.log("🔄 QUERY FINAL:", query);
+    console.log("📦 VALORES:", valores);
 
     const result = await pool.query(query, valores);
+
+    console.log("🧾 IDs devueltos:", result.rows.map(p => p.id));
+
     return result.rows.map(row =>
       new Producto(
         row.id,
@@ -128,7 +143,6 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
     );
   }
 
-  // ✅ MÉTODO contarFiltrados CORREGIDO
   async contarFiltrados(filtros: {
     busqueda?: string;
     precioMin?: number;
@@ -139,7 +153,7 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
     const condiciones: string[] = [];
     let i = 1;
 
-    if (filtros.busqueda && filtros.busqueda.trim() !== "") {
+    if (filtros.busqueda?.trim()) {
       condiciones.push(`(LOWER(nombre) LIKE $${i} OR LOWER(descripcion) LIKE $${i})`);
       valores.push(`%${filtros.busqueda.toLowerCase()}%`);
       i++;
@@ -167,6 +181,9 @@ export class ProductoRepositorioSQL implements ProductoRepositorio {
     if (condiciones.length > 0) {
       query += ` WHERE ` + condiciones.join(" AND ");
     }
+
+    console.log("🧪 QUERY DE CONTEO:", query);
+    console.log("📦 VALORES:", valores);
 
     const result = await pool.query(query, valores);
     return parseInt(result.rows[0].count);

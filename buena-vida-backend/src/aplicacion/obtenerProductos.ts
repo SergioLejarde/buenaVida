@@ -13,34 +13,42 @@ interface FiltrosProductos {
 export class ObtenerProductos {
   constructor(private productoRepositorio: ProductoRepositorio) {}
 
-  async ejecutar(filtros: FiltrosProductos): Promise<{ productos: Producto[], total: number }> {
+  async ejecutar(filtros: FiltrosProductos): Promise<{
+    productos: Producto[];
+    total: number;
+    totalPaginas: number;
+  }> {
     const {
       q = '',
-      min = 0,
-      max = Number.MAX_SAFE_INTEGER,
       promo,
       page = 1,
       limit = 12,
+      min,
+      max
     } = filtros;
 
     const offset = (page - 1) * limit;
 
-    const productos = await this.productoRepositorio.filtrar({
+    const filtrosBase: any = {
       busqueda: q,
-      precioMin: min,
-      precioMax: max,
-      promocion: promo,
       offset,
       limit,
-    });
+    };
 
-    const total = await this.productoRepositorio.contarFiltrados({
-      busqueda: q,
-      precioMin: min,
-      precioMax: max,
-      promocion: promo,
-    });
+    if (typeof min === "number") filtrosBase.precioMin = min;
+    if (typeof max === "number") filtrosBase.precioMax = max;
+    if (typeof promo === "boolean") filtrosBase.promocion = promo;
 
-    return { productos, total };
+    // 🔍 Ayuda temporal para depurar
+    console.log("📩 Filtros enviados al repositorio:", filtrosBase);
+
+    const productos = await this.productoRepositorio.filtrar(filtrosBase);
+    const total = await this.productoRepositorio.contarFiltrados(filtrosBase);
+
+    return {
+      productos,
+      total,
+      totalPaginas: Math.ceil(total / limit),
+    };
   }
 }

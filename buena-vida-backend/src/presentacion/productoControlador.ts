@@ -7,21 +7,28 @@ export const productoControlador = async (req: Request, res: Response): Promise<
   const repo = new ProductoRepositorioSQL();
   const servicio = new ObtenerProductos(repo);
 
-  const filtros = {
-    q: req.query.q?.toString() || "",
-    min: parseFloat(req.query.min as string) || 0,
-    max: parseFloat(req.query.max as string) || Number.MAX_SAFE_INTEGER,
-    promo: req.query.promo === "true" ? true : req.query.promo === "false" ? false : undefined,
+  const page = Number.isInteger(Number(req.query.page)) ? parseInt(req.query.page as string) : 1;
+  const limit = Number.isInteger(Number(req.query.limit)) ? parseInt(req.query.limit as string) : 12;
 
-    page: parseInt(req.query.page as string) || 1,
-    limit: parseInt(req.query.limit as string) || 12,
+  const filtros = {
+    q: req.query.q?.toString() ?? "",
+    min: isNaN(Number(req.query.min)) ? undefined : parseFloat(req.query.min as string),
+    max: isNaN(Number(req.query.max)) ? undefined : parseFloat(req.query.max as string),
+    promo: typeof req.query.promo === "string" && (req.query.promo === "true" || req.query.promo === "false")
+      ? req.query.promo === "true"
+      : undefined,
+    page,
+    limit
   };
 
+  console.log("📥 Query params:", req.query);
+  console.log("📦 Filtros calculados:", filtros);
+
   try {
-    const { productos, total } = await servicio.ejecutar(filtros);
-    const totalPaginas = Math.ceil(total / filtros.limit);
-    res.json({ productos, totalPaginas });
+    const { productos, total, totalPaginas } = await servicio.ejecutar(filtros);
+    res.json({ productos, total, totalPaginas });
   } catch (error) {
+    console.error("❌ Error en productoControlador:", error);
     res.status(500).json({ error: "Error al obtener productos" });
   }
 };
@@ -45,6 +52,7 @@ export const obtenerProductoPorId = async (req: Request, res: Response): Promise
 
     res.json(producto);
   } catch (error) {
+    console.error("❌ Error en obtenerProductoPorId:", error);
     res.status(500).json({ error: "Error al obtener el producto" });
   }
 };
