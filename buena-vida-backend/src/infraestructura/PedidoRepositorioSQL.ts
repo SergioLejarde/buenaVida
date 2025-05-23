@@ -1,11 +1,15 @@
-import DatabaseSingleton from "./databaseSingleton"; // 🔹 Corregí la importación para coincidir con el nombre del archivo
+import DatabaseSingleton from "./databaseSingleton";
 import { PedidoRepositorio } from "../dominio/pedidoRepositorio";
 import { Pedido } from "../dominio/pedido";
 
 const pool = DatabaseSingleton.getInstance();
 
 export class PedidoRepositorioSQL implements PedidoRepositorio {
-  async crearPedido(usuarioId: number, productos: { productoId: number; cantidad: number; precio: number }[], total: number): Promise<Pedido> {
+  async crearPedido(
+    usuarioId: number,
+    productos: { productoId: number; cantidad: number; precio: number }[],
+    total: number
+  ): Promise<Pedido> {
     const pedidoResult = await pool.query(
       "INSERT INTO pedidos (usuario_id, total, estado, fecha) VALUES ($1, $2, 'pendiente', NOW()) RETURNING id, fecha, estado",
       [usuarioId, total]
@@ -30,10 +34,6 @@ export class PedidoRepositorioSQL implements PedidoRepositorio {
       "SELECT * FROM pedidos WHERE usuario_id = $1 ORDER BY fecha DESC",
       [usuarioId]
     );
-
-    if (pedidosResult.rows.length === 0) {
-      return []; // 🔹 Ahora devuelve un array vacío en lugar de un error.
-    }
 
     const pedidos: Pedido[] = [];
 
@@ -62,5 +62,29 @@ export class PedidoRepositorioSQL implements PedidoRepositorio {
       [productoId]
     );
     return result.rows.length > 0 ? result.rows[0].precio : null;
+  }
+
+  // ✅ NUEVO: Devuelve todos los pedidos del sistema (para el panel admin)
+  async obtenerTodosLosPedidos(): Promise<Pedido[]> {
+    const pedidosResult = await pool.query("SELECT * FROM pedidos ORDER BY fecha DESC");
+    const pedidos: Pedido[] = [];
+
+    for (const pedidoRow of pedidosResult.rows) {
+      const productosResult = await pool.query(
+        "SELECT producto_id, cantidad, precio FROM pedido_productos WHERE pedido_id = $1",
+        [pedidoRow.id]
+      );
+
+      pedidos.push(new Pedido(
+        pedidoRow.id,
+        pedidoRow.usuario_id,
+        pedidoRow.total,
+        pedidoRow.fecha,
+        pedidoRow.estado,
+        productosResult.rows
+      ));
+    }
+
+    return pedidos;
   }
 }

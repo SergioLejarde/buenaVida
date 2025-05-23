@@ -8,12 +8,12 @@ import {
   eliminarProductoCarrito,
   vaciarCarrito
 } from "./carritoControlador";
-import { realizarPedido, obtenerPedidos } from "./pedidoControlador";
+import { realizarPedido, obtenerPedidos, obtenerTodosLosPedidos } from "./pedidoControlador"; // ✅
 import { verificarToken } from "../middleware/auth";
 import { verificarRol } from "../middleware/verificarRol";
 import { UsuarioRepositorioSQL } from "../infraestructura/usuarioRepositorioSQL";
 import { obtenerFavoritos } from "./favoritosControlador";
-import { agregarFavorito } from "./agregarFavoritoControlador"; // ✅ nuevo import
+import { agregarFavorito } from "./agregarFavoritoControlador";
 
 const router = express.Router();
 
@@ -38,7 +38,7 @@ router.get("/productos/:id", obtenerProductoPorId);
 
 // 🔹 Rutas de Favoritos
 router.get("/favoritos/:usuarioId", verificarToken, obtenerFavoritos);
-router.post("/favoritos", verificarToken, agregarFavorito); // ✅ NUEVA RUTA
+router.post("/favoritos", verificarToken, agregarFavorito);
 
 // 🔹 Rutas de Carrito de Compras
 router.post("/carrito/agregar", verificarToken, agregarAlCarrito);
@@ -50,5 +50,6 @@ router.delete("/carrito/vaciar", verificarToken, vaciarCarrito);
 // 🔹 Rutas de Pedidos
 router.post("/pedidos", verificarToken, realizarPedido);
 router.get("/pedidos", verificarToken, obtenerPedidos);
+router.get("/admin/pedidos", verificarToken, verificarRol("admin"), obtenerTodosLosPedidos); // ✅ Nueva ruta
 
 export default router;
